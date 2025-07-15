@@ -135,6 +135,6 @@ export class SessionManager {
       .single()
 
     if (error || !data) return null
-    return data
+    return data as unknown as Student
   }
 }

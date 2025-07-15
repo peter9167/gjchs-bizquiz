@@ -10,7 +10,7 @@ export class PortfolioManager {
       .single()
 
     if (error || !data) return null
-    return data
+    return data as unknown as Portfolio
   }
 
   static async createPortfolio(studentId: string): Promise<Portfolio | null> {
@@ -25,7 +25,7 @@ export class PortfolioManager {
       .single()
 
     if (error || !data) return null
-    return data
+    return data as unknown as Portfolio
   }
 
   static async getLiveRankings(): Promise<LiveRanking[]> {
@@ -36,7 +36,7 @@ export class PortfolioManager {
       .limit(100)
 
     if (error || !data) return []
-    return data
+    return data as unknown as LiveRanking[]
   }
 
   static async getClassRankings(grade: number, classNum: number): Promise<LiveRanking[]> {
@@ -48,7 +48,7 @@ export class PortfolioManager {
       .order('rank', { ascending: true })
 
     if (error || !data) return []
-    return data
+    return data as unknown as LiveRanking[]
   }
 
   static async getGradeRankings(grade: number): Promise<LiveRanking[]> {
@@ -59,7 +59,7 @@ export class PortfolioManager {
       .order('rank', { ascending: true })
 
     if (error || !data) return []
-    return data
+    return data as unknown as LiveRanking[]
   }
 
   static async getStockPrices(
@@ -83,7 +83,7 @@ export class PortfolioManager {
     const { data, error } = await query
 
     if (error || !data) return []
-    return data.reverse() // Show oldest to newest for chart
+    return (data as unknown as StockPrice[]).reverse() // Show oldest to newest for chart
   }
 
   static async updateStockPrices(): Promise<void> {
@@ -122,7 +122,7 @@ export class PortfolioManager {
     const quizScores: { date: string; score: number; totalQuestions: number }[] = []
 
     sessions.forEach((session, index) => {
-      const scorePercentage = (session.score / session.total_questions) * 100
+      const scorePercentage = ((session as any).score / (session as any).total_questions) * 100
       let assetChange = 0
 
       // Calculate asset change based on score
@@ -138,9 +138,9 @@ export class PortfolioManager {
       dates.push(`퀴즈 ${index + 1}`)
       
       quizScores.push({
-        date: new Date(session.completed_at!).toLocaleDateString('ko-KR'),
-        score: session.score,
-        totalQuestions: session.total_questions
+        date: new Date((session as any).completed_at!).toLocaleDateString('ko-KR'),
+        score: (session as any).score,
+        totalQuestions: (session as any).total_questions
       })
     })
 
@@ -193,7 +193,7 @@ export class PortfolioManager {
         }
 
         const totalScore = recentSessions.reduce((sum, session) => 
-          sum + (session.score / session.total_questions) * 100, 0
+          sum + ((session as any).score / (session as any).total_questions) * 100, 0
         )
         const averageScore = totalScore / recentSessions.length
 

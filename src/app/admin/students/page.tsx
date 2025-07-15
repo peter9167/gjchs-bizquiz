@@ -50,10 +50,10 @@ export default function StudentsManagement() {
     return matchesSearch && matchesGrade && matchesClass
   })
 
-  const grades = [...new Set(students.map(s => s.grade))].sort()
+  const grades = Array.from(new Set(students.map(s => s.grade))).sort()
   const classes = filterGrade 
-    ? [...new Set(students.filter(s => s.grade.toString() === filterGrade).map(s => s.class))].sort()
-    : [...new Set(students.map(s => s.class))].sort()
+    ? Array.from(new Set(students.filter(s => s.grade.toString() === filterGrade).map(s => s.class))).sort()
+    : Array.from(new Set(students.map(s => s.class))).sort()
 
   if (loading) {
     return (
@@ -279,7 +279,7 @@ export default function StudentsManagement() {
               <h2 className="text-2xl font-bold text-gray-900 mb-6">학급별 통계</h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {[...new Set(students.map(s => `${s.grade}-${s.class}`))]
+                {Array.from(new Set(students.map(s => `${s.grade}-${s.class}`)))
                   .sort()
                   .map(gradeClass => {
                     const [grade, classNum] = gradeClass.split('-')

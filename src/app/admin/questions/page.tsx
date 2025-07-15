@@ -50,8 +50,8 @@ export default function QuestionsManagement() {
     return matchesSearch && matchesCategory && matchesDifficulty
   })
 
-  const categories = [...new Set(questions.map(q => q.category).filter(Boolean))]
-  const difficulties = [...new Set(questions.map(q => q.difficulty))]
+  const categories = Array.from(new Set(questions.map(q => q.category).filter(Boolean)))
+  const difficulties = Array.from(new Set(questions.map(q => q.difficulty)))
 
   if (loading) {
     return (

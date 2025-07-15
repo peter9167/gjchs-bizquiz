@@ -154,7 +154,7 @@ export class QuizManager {
       .order('completed_at', { ascending: false })
 
     if (error || !data) return []
-    return data
+    return data as unknown as QuizSession[]
   }
 
   static async hasStudentTakenQuiz(

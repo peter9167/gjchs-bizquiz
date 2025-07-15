@@ -12,7 +12,7 @@ export class AdminManager {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return data || []
+    return (data as unknown as Question[]) || []
   }
 
   static async getQuestion(id: string): Promise<Question | null> {
@@ -23,7 +23,7 @@ export class AdminManager {
       .single()
 
     if (error) return null
-    return data
+    return data as unknown as Question
   }
 
   static async createQuestion(questionData: Omit<Question, 'id' | 'created_at'>): Promise<Question | null> {
@@ -37,7 +37,7 @@ export class AdminManager {
       console.error('Error creating question:', error)
       return null
     }
-    return data
+    return data as unknown as Question
   }
 
   static async updateQuestion(id: string, updates: Partial<Question>): Promise<Question | null> {
@@ -52,7 +52,7 @@ export class AdminManager {
       console.error('Error updating question:', error)
       return null
     }
-    return data
+    return data as unknown as Question
   }
 
   static async deleteQuestion(id: string): Promise<boolean> {
@@ -286,17 +286,17 @@ export class AdminManager {
       ]
 
       const csvData = sessions.map(session => [
-        session.quiz_schedules?.title || '',
-        session.students?.name || '',
-        session.students?.grade || '',
-        session.students?.class || '',
-        session.students?.number || '',
-        session.students?.phone || '',
-        session.score,
-        session.total_questions,
-        Math.round((session.score / session.total_questions) * 100 * 10) / 10,
-        session.time_taken_seconds || '',
-        session.completed_at ? new Date(session.completed_at).toLocaleString('ko-KR') : ''
+        (session.quiz_schedules as any)?.title || '',
+        (session.students as any)?.name || '',
+        (session.students as any)?.grade || '',
+        (session.students as any)?.class || '',
+        (session.students as any)?.number || '',
+        (session.students as any)?.phone || '',
+        (session as any).score,
+        (session as any).total_questions,
+        Math.round(((session as any).score / (session as any).total_questions) * 100 * 10) / 10,
+        (session as any).time_taken_seconds || '',
+        (session as any).completed_at ? new Date((session as any).completed_at).toLocaleString('ko-KR') : ''
       ])
 
       return [headers, ...csvData]

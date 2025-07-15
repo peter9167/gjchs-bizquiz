@@ -80,12 +80,13 @@ export async function GET() {
     // Class performance
     const classMap = new Map()
     sessions.forEach(session => {
-      if (session.students) {
-        const key = `${session.students.grade}-${session.students.class}`
+      if (session.students && !Array.isArray(session.students)) {
+        const student = session.students as any
+        const key = `${student.grade}-${student.class}`
         if (!classMap.has(key)) {
           classMap.set(key, {
-            grade: session.students.grade,
-            class: session.students.class,
+            grade: student.grade,
+            class: student.class,
             scores: [],
             studentCount: 0
           })

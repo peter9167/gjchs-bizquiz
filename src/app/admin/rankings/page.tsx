@@ -118,7 +118,7 @@ export default function AdminRankings() {
   }
 
   const getUniqueValues = (key: 'grade' | 'class') => {
-    const values = [...new Set(rankings.map(r => r[key]))]
+    const values = Array.from(new Set(rankings.map(r => r[key])))
     return values.sort((a, b) => a - b)
   }
 
