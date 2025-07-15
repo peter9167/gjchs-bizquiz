@@ -52,8 +52,6 @@ export async function POST(request: NextRequest) {
         id: sessionId,
         student_id,
         schedule_id,
-        question_ids,
-        current_question_index: 0,
         score: 0,
         total_questions: question_ids.length,
         started_at: new Date().toISOString(),
@@ -87,9 +85,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { session_id, sessionId, question_index, answer, is_correct, completed } = body
+    const { session_id, sessionId, question_index, questionId, answer, is_correct, completed, timeTakenSeconds } = body
 
-    console.log('Updating quiz session:', { session_id, sessionId, question_index, answer, is_correct, completed })
+    console.log('Updating quiz session:', { session_id, sessionId, question_index, questionId, answer, is_correct, completed, timeTakenSeconds })
 
     const finalSessionId = session_id || sessionId
 
@@ -115,16 +113,60 @@ export async function PUT(request: NextRequest) {
       )
     }
 
+    // 스케줄에서 question_ids 가져오기
+    const { data: schedule, error: scheduleError } = await supabase
+      .from('quiz_schedules')
+      .select('question_ids')
+      .eq('id', currentSession.schedule_id)
+      .single()
+
+    if (scheduleError) {
+      console.error('Error fetching schedule:', scheduleError)
+      return NextResponse.json(
+        { error: '스케줄을 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
     // 답안 추가 - 다양한 형식 지원
     let updatedAnswers
+    let finalQuestionIndex = question_index
     
-    if (question_index !== undefined) {
+    // questionId가 제공된 경우 question_index로 변환
+    if (questionId && !finalQuestionIndex) {
+      finalQuestionIndex = schedule.question_ids.indexOf(questionId)
+      if (finalQuestionIndex === -1) {
+        return NextResponse.json(
+          { error: '유효하지 않은 질문 ID입니다.' },
+          { status: 400 }
+        )
+      }
+    }
+    
+    if (finalQuestionIndex !== undefined) {
       // 인덱스 기반 답안 추가
       updatedAnswers = [...(currentSession.answers || [])]
-      updatedAnswers[question_index] = {
-        question_index,
+      
+      // 정답 여부 확인
+      let correctness = is_correct
+      if (correctness === undefined && questionId) {
+        // 정답 확인
+        const { data: question, error: questionError } = await supabase
+          .from('questions')
+          .select('correct_answer')
+          .eq('id', questionId)
+          .single()
+        
+        if (!questionError && question) {
+          correctness = answer === question.correct_answer
+        }
+      }
+      
+      updatedAnswers[finalQuestionIndex] = {
+        question_index: finalQuestionIndex,
+        question_id: questionId,
         answer,
-        is_correct,
+        is_correct: correctness,
         answered_at: new Date().toISOString()
       }
     } else {
@@ -143,13 +185,13 @@ export async function PUT(request: NextRequest) {
       score: newScore
     }
 
-    // 현재 문제 인덱스 업데이트
-    if (question_index !== undefined) {
-      updateData.current_question_index = question_index + 1
+    // 시간 정보 업데이트
+    if (timeTakenSeconds !== undefined) {
+      updateData.time_taken_seconds = timeTakenSeconds
     }
 
     // 퀴즈 완료 시 완료 시간 설정
-    if (completed) {
+    if (completed || timeTakenSeconds !== undefined) {
       updateData.completed_at = new Date().toISOString()
     }
 
