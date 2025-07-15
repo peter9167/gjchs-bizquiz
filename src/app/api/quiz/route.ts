@@ -1,20 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase'
 
 // 이 경로는 동적으로 렌더링되어야 함
 export const dynamic = 'force-dynamic'
 
-// 서버 사이드에서 service role key 사용
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+// 중앙화된 supabase 클라이언트 사용
+const supabase = supabaseAdmin
 
 // 통합된 퀴즈 API - GET 요청
 export async function GET(request: NextRequest) {
@@ -300,11 +291,20 @@ async function handleActiveQuizzes() {
 
 // 퀴즈 세션 생성 (기존 POST 동작)
 async function handleCreateSession(request: NextRequest) {
-  const { studentId, scheduleId, totalQuestions } = await request.json()
+  const body = await request.json()
+  console.log('Create session request body:', body)
+  
+  const { studentId, scheduleId, totalQuestions, student_id, schedule_id, question_ids } = body
 
-  if (!studentId || !scheduleId || !totalQuestions) {
+  // 다양한 필드명 지원
+  const finalStudentId = studentId || student_id
+  const finalScheduleId = scheduleId || schedule_id
+  const finalTotalQuestions = totalQuestions || (question_ids ? question_ids.length : null)
+
+  if (!finalStudentId || !finalScheduleId) {
+    console.error('Missing required fields:', { finalStudentId, finalScheduleId })
     return NextResponse.json(
-      { error: '필수 매개변수가 누락되었습니다.' },
+      { error: '학생 ID와 스케줄 ID가 필요합니다.' },
       { status: 400 }
     )
   }
@@ -313,8 +313,8 @@ async function handleCreateSession(request: NextRequest) {
   const { data: existingSession } = await supabase
     .from('quiz_sessions')
     .select('id')
-    .eq('student_id', studentId)
-    .eq('schedule_id', scheduleId)
+    .eq('student_id', finalStudentId)
+    .eq('schedule_id', finalScheduleId)
     .not('completed_at', 'is', null)
     .maybeSingle()
 
@@ -326,16 +326,25 @@ async function handleCreateSession(request: NextRequest) {
   }
 
   // 새 퀴즈 세션 생성
+  const sessionData = {
+    student_id: finalStudentId,
+    schedule_id: finalScheduleId,
+    total_questions: finalTotalQuestions || 10,
+    answers: question_ids ? [] : {},
+    started_at: new Date().toISOString()
+  }
+
+  // question_ids가 있으면 추가
+  if (question_ids) {
+    sessionData.question_ids = question_ids
+    sessionData.current_question_index = 0
+    sessionData.score = 0
+  }
+
   const { data: session, error } = await supabase
     .from('quiz_sessions')
-    .insert({
-      student_id: studentId,
-      schedule_id: scheduleId,
-      total_questions: totalQuestions,
-      answers: {},
-      started_at: new Date().toISOString()
-    })
-    .select('id')
+    .insert(sessionData)
+    .select('*')
     .single()
 
   if (error) {
@@ -348,7 +357,8 @@ async function handleCreateSession(request: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    sessionId: session.id
+    sessionId: session.id,
+    session: session
   })
 }
 

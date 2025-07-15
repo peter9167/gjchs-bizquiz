@@ -1,19 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 
 export const dynamic = 'force-dynamic'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-)
+const supabase = supabaseAdmin
 
 // 퀴즈 세션 생성
 export async function POST(request: NextRequest) {
@@ -96,13 +87,15 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
-    const { session_id, question_index, answer, is_correct, completed } = body
+    const { session_id, sessionId, question_index, answer, is_correct, completed } = body
 
-    console.log('Updating quiz session:', { session_id, question_index, answer, is_correct, completed })
+    console.log('Updating quiz session:', { session_id, sessionId, question_index, answer, is_correct, completed })
 
-    if (!session_id || question_index === undefined) {
+    const finalSessionId = session_id || sessionId
+
+    if (!finalSessionId) {
       return NextResponse.json(
-        { error: 'session_id와 question_index가 필요합니다.' },
+        { error: 'session_id 또는 sessionId가 필요합니다.' },
         { status: 400 }
       )
     }
@@ -111,7 +104,7 @@ export async function PUT(request: NextRequest) {
     const { data: currentSession, error: fetchError } = await supabase
       .from('quiz_sessions')
       .select('*')
-      .eq('id', session_id)
+      .eq('id', finalSessionId)
       .single()
 
     if (fetchError) {
@@ -122,23 +115,37 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // 답안 추가
-    const updatedAnswers = [...(currentSession.answers || [])]
-    updatedAnswers[question_index] = {
-      question_index,
-      answer,
-      is_correct,
-      answered_at: new Date().toISOString()
+    // 답안 추가 - 다양한 형식 지원
+    let updatedAnswers
+    
+    if (question_index !== undefined) {
+      // 인덱스 기반 답안 추가
+      updatedAnswers = [...(currentSession.answers || [])]
+      updatedAnswers[question_index] = {
+        question_index,
+        answer,
+        is_correct,
+        answered_at: new Date().toISOString()
+      }
+    } else {
+      // 전체 답안 업데이트
+      updatedAnswers = body.answers || currentSession.answers || []
     }
 
     // 점수 계산
-    const newScore = updatedAnswers.filter(a => a && a.is_correct).length
+    const newScore = Array.isArray(updatedAnswers) 
+      ? updatedAnswers.filter(a => a && a.is_correct).length
+      : body.score || currentSession.score || 0
 
     // 세션 업데이트 데이터 준비
     const updateData: any = {
       answers: updatedAnswers,
-      score: newScore,
-      current_question_index: question_index + 1
+      score: newScore
+    }
+
+    // 현재 문제 인덱스 업데이트
+    if (question_index !== undefined) {
+      updateData.current_question_index = question_index + 1
     }
 
     // 퀴즈 완료 시 완료 시간 설정
@@ -150,7 +157,7 @@ export async function PUT(request: NextRequest) {
     const { data: updatedSession, error } = await supabase
       .from('quiz_sessions')
       .update(updateData)
-      .eq('id', session_id)
+      .eq('id', finalSessionId)
       .select()
       .single()
 
