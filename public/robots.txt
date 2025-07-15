@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /quiz-select
+Allow: /rankings
+Allow: /student-register
+
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://gjchs-bizquiz.vercel.app/sitemap.xml

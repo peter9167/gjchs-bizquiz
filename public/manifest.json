@@ -1,0 +1,21 @@
+{
+  "name": "GJCHS BizQuiz - 광주여상 비즈니스 퀴즈",
+  "short_name": "GJCHS BizQuiz",
+  "description": "광주여자상업고등학교 모의주식 거래 퀴즈 시스템",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
