@@ -46,7 +46,10 @@ export default function AdminLogin() {
         <div className="bg-white rounded-lg shadow-xl p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">관리자 로그인</h1>
-            <p className="text-gray-600">광주여자상업고등학교 모의주식 퀴즈</p>
+            <p className="text-gray-600">
+              광주여자상업고등학교<br />
+              모의주식 퀴즈
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">

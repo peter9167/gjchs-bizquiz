@@ -46,7 +46,8 @@ export default function Home() {
         <div className="card max-w-md w-full mx-4">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              광주여자상업고등학교 모의주식 퀴즈
+              광주여자상업고등학교<br />
+              모의주식 퀴즈
             </h1>
             <p className="text-gray-600">
               퀴즈를 통해 가상 자산을 늘려보세요!
