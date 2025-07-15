@@ -45,9 +45,16 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Error fetching questions:', error)
       return NextResponse.json(
-        { error: '문제를 불러오는데 실패했습니다.' },
+        { error: '문제를 불러오는데 실패했습니다.', details: error.message },
         { status: 500 }
       )
+    }
+
+    if (!questions || questions.length === 0) {
+      return NextResponse.json({
+        success: true,
+        questions: []
+      })
     }
 
     const orderedQuestions = ids.map(id => 

@@ -16,7 +16,9 @@
       "Bash(git add:*)",
       "Bash(vercel env add:*)",
       "Bash(vercel link:*)",
-      "Bash(vercel:*)"
+      "Bash(vercel:*)",
+      "Bash(del icon-192x192.png icon-512x512.png)",
+      "Bash(npx @next/font-google icon-generator:*)"
     ],
     "deny": []
   }
