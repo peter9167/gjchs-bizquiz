@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// 서버 사이드에서 service role key 사용
+export const dynamic = 'force-dynamic'
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -13,7 +14,7 @@ const supabase = createClient(
   }
 )
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const [
       { count: totalQuizzes },
@@ -49,7 +50,6 @@ export async function GET() {
         recentSessions: completedSessions
       }
     })
-
   } catch (error) {
     console.error('Basic analytics API error:', error)
     return NextResponse.json(

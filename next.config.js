@@ -9,8 +9,8 @@ const nextConfig = {
     return 'gjchs-bizquiz-' + Date.now()
   },
   experimental: {
-    outputFileTracingIncludes: {
-      '/api/**/*': ['./node_modules/**/*.wasm', './node_modules/**/*.node'],
+    outputFileTracingExcludes: {
+      '/api/**/*': ['./node_modules/typescript/**/*', './node_modules/eslint/**/*'],
     },
   },
   typescript: {
@@ -18,6 +18,16 @@ const nextConfig = {
   },
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        'typescript': 'commonjs typescript',
+        'eslint': 'commonjs eslint',
+      });
+    }
+    return config;
   },
 }
 

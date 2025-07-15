@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
+// 이 경로는 동적으로 렌더링되어야 함
+export const dynamic = 'force-dynamic'
+
 // 서버 사이드에서 service role key 사용
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

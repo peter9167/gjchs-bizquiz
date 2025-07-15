@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// 서버 사이드에서 service role key 사용
+export const dynamic = 'force-dynamic'
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -16,39 +17,47 @@ const supabase = createClient(
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const questionIds = searchParams.get('ids')
+    const idsParam = searchParams.get('ids')
 
-    if (!questionIds) {
+    if (!idsParam) {
       return NextResponse.json(
-        { error: '문제 ID 목록이 필요합니다.' },
+        { error: 'ids 파라미터가 필요합니다.' },
         { status: 400 }
       )
     }
 
-    const idsArray = questionIds.split(',')
+    const ids = idsParam.split(',').map(id => id.trim())
 
     const { data: questions, error } = await supabase
       .from('questions')
-      .select('*')
-      .in('id', idsArray)
+      .select(`
+        id,
+        question,
+        options,
+        correct_answer,
+        explanation,
+        difficulty,
+        category,
+        created_at
+      `)
+      .in('id', ids)
 
     if (error) {
       console.error('Error fetching questions:', error)
       return NextResponse.json(
-        { error: '문제 조회 중 오류가 발생했습니다.' },
+        { error: '문제를 불러오는데 실패했습니다.' },
         { status: 500 }
       )
     }
 
-    // 문제 랜덤 셔플
-    const shuffledQuestions = questions ? 
-      questions.sort(() => Math.random() - 0.5) : []
+    const orderedQuestions = ids.map(id => 
+      questions?.find(q => q.id === id)
+    ).filter(Boolean)
 
     return NextResponse.json({
       success: true,
-      questions: shuffledQuestions
+      questions: orderedQuestions
     })
-
   } catch (error) {
     console.error('Quiz questions API error:', error)
     return NextResponse.json(

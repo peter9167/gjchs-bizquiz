@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// 서버 사이드에서 service role key 사용
+export const dynamic = 'force-dynamic'
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -21,32 +22,31 @@ export async function GET(request: NextRequest) {
 
     if (!studentId || !scheduleId) {
       return NextResponse.json(
-        { error: '학생 ID와 스케줄 ID가 필요합니다.' },
+        { error: 'studentId와 scheduleId가 필요합니다.' },
         { status: 400 }
       )
     }
 
-    const { data, error } = await supabase
+    const { data: session, error } = await supabase
       .from('quiz_sessions')
-      .select('id')
+      .select('*')
       .eq('student_id', studentId)
       .eq('schedule_id', scheduleId)
-      .not('completed_at', 'is', null)
-      .maybeSingle()
+      .single()
 
-    if (error) {
-      console.error('Error checking quiz status:', error)
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error checking quiz session:', error)
       return NextResponse.json(
-        { error: '퀴즈 상태 확인 중 오류가 발생했습니다.' },
+        { error: '퀴즈 세션을 확인하는데 실패했습니다.' },
         { status: 500 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      hasTaken: !!data
+      hasTaken: !!session,
+      session: session || null
     })
-
   } catch (error) {
     console.error('Quiz check API error:', error)
     return NextResponse.json(
