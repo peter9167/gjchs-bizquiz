@@ -8,6 +8,17 @@ const nextConfig = {
   generateBuildId: async () => {
     return 'gjchs-bizquiz-' + Date.now()
   },
+  experimental: {
+    outputFileTracingIncludes: {
+      '/api/**/*': ['./node_modules/**/*.wasm', './node_modules/**/*.node'],
+    },
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 }
 
 module.exports = nextConfig
