@@ -19,7 +19,8 @@
       "Bash(vercel:*)",
       "Bash(del icon-192x192.png icon-512x512.png)",
       "Bash(npx @next/font-google icon-generator:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
