@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -17,6 +19,7 @@
 }
 
 body {
+  font-family: 'Noto Sans KR', sans-serif;
   color: #1f2937; /* 항상 어두운 텍스트 */
   background: linear-gradient(
       to bottom,
