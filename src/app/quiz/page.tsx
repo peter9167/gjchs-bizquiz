@@ -37,11 +37,14 @@ export default function Quiz() {
 
   const initializeQuiz = async () => {
     try {
+      console.log('Initializing quiz...')
       const currentStudent = await SessionManager.getCurrentStudent()
       if (!currentStudent) {
+        console.log('No current student found, redirecting to home')
         router.push('/')
         return
       }
+      console.log('Current student:', currentStudent)
       setStudent(currentStudent)
 
       // URL에서 scheduleId 파라미터 확인
@@ -89,18 +92,22 @@ export default function Quiz() {
         return
       }
 
+      console.log('Loading quiz questions for quiz:', quiz)
       const questions = await QuizManager.getQuizQuestions(quiz.question_ids)
+      console.log('Loaded questions:', questions)
       if (questions.length === 0) {
         setError('퀴즈 문제를 불러올 수 없습니다.')
         setLoading(false)
         return
       }
 
+      console.log('Starting quiz session...')
       const sessionId = await QuizManager.startQuizSession(
         currentStudent.id,
         quiz.id,
         questions.length
       )
+      console.log('Session ID:', sessionId)
       if (!sessionId) {
         setError('퀴즈 세션을 시작할 수 없습니다.')
         setLoading(false)
@@ -115,7 +122,8 @@ export default function Quiz() {
         timeLeft: quiz.time_limit_minutes * 60
       })
     } catch (err) {
-      setError('퀴즈를 불러오는 중 오류가 발생했습니다.')
+      console.error('Error initializing quiz:', err)
+      setError('퀴즈를 불러오는 중 오류가 발생했습니다: ' + (err instanceof Error ? err.message : String(err)))
     } finally {
       setLoading(false)
     }

@@ -36,14 +36,18 @@ export class QuizManager {
 
   static async getQuizQuestions(questionIds: string[]): Promise<Question[]> {
     try {
+      console.log('Fetching quiz questions with IDs:', questionIds)
+      
       const response = await fetch(`/api/quiz/questions?ids=${questionIds.join(',')}`)
       const data = await response.json()
+      console.log('Quiz questions response:', data)
       
       if (data.success) {
         return data.questions
+      } else {
+        console.error('Failed to fetch quiz questions:', data.error)
+        return []
       }
-      
-      return []
     } catch (error) {
       console.error('Error fetching quiz questions:', error)
       return []
@@ -56,6 +60,8 @@ export class QuizManager {
     totalQuestions: number
   ): Promise<string | null> {
     try {
+      console.log('Starting quiz session with:', { studentId, scheduleId, totalQuestions })
+      
       const response = await fetch('/api/quiz', {
         method: 'POST',
         headers: {
@@ -69,12 +75,14 @@ export class QuizManager {
       })
       
       const result = await response.json()
+      console.log('Quiz session response:', result)
       
       if (result.success) {
         return result.sessionId
+      } else {
+        console.error('Failed to create quiz session:', result.error)
+        return null
       }
-      
-      return null
     } catch (error) {
       console.error('Error starting quiz session:', error)
       return null

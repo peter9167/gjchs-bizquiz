@@ -309,6 +309,36 @@ async function handleCreateSession(request: NextRequest) {
     )
   }
 
+  // 학생 존재 확인
+  const { data: studentExists, error: studentError } = await supabase
+    .from('students')
+    .select('id')
+    .eq('id', finalStudentId)
+    .single()
+    
+  if (studentError || !studentExists) {
+    console.error('Student not found:', { finalStudentId, studentError })
+    return NextResponse.json(
+      { error: '학생을 찾을 수 없습니다.' },
+      { status: 404 }
+    )
+  }
+
+  // 스케줄 존재 확인
+  const { data: scheduleExists, error: scheduleError } = await supabase
+    .from('quiz_schedules')
+    .select('id')
+    .eq('id', finalScheduleId)
+    .single()
+    
+  if (scheduleError || !scheduleExists) {
+    console.error('Schedule not found:', { finalScheduleId, scheduleError })
+    return NextResponse.json(
+      { error: '퀴즈 스케줄을 찾을 수 없습니다.' },
+      { status: 404 }
+    )
+  }
+
   // 이미 완료한 퀴즈인지 확인
   const { data: existingSession } = await supabase
     .from('quiz_sessions')
@@ -330,27 +360,28 @@ async function handleCreateSession(request: NextRequest) {
     student_id: finalStudentId,
     schedule_id: finalScheduleId,
     total_questions: finalTotalQuestions || 10,
-    answers: question_ids ? [] : {},
-    started_at: new Date().toISOString()
+    answers: {}
   }
 
-  // question_ids가 있으면 추가
-  if (question_ids) {
-    sessionData.question_ids = question_ids
-    sessionData.current_question_index = 0
-    sessionData.score = 0
-  }
+  console.log('Inserting session data:', sessionData)
 
   const { data: session, error } = await supabase
     .from('quiz_sessions')
     .insert(sessionData)
     .select('*')
     .single()
+    
+  console.log('Insert result:', { session, error })
 
   if (error) {
     console.error('Error creating quiz session:', error)
     return NextResponse.json(
-      { error: '퀴즈 세션 생성 중 오류가 발생했습니다.' },
+      { 
+        success: false,
+        error: '퀴즈 세션 생성 중 오류가 발생했습니다.',
+        details: error.message,
+        code: error.code
+      },
       { status: 500 }
     )
   }
